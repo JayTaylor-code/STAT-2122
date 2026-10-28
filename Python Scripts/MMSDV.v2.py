@@ -1,6 +1,6 @@
 import numpy as np
 
-data = [12, 15, 18, 22, 25, 30]
+data = [165, 225, 185, 341, 77, 227, 176, 154, 224, 204, 94]
 
 mean = np.mean(data)
 median = np.median(data)
