@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Joint Density & Marginals Viewer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">STATISTICS LAB</p>
+      <h1>Joint Density <span>&amp; Marginals</span></h1>
+      <p class="subtitle">Explore bivariate data, joint densities, and their marginal distributions.</p>
+    </div>
+    <div class="status-pill"><span class="status-dot"></span> Runs locally in your browser</div>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <div class="section-heading">
+        <div><p class="eyebrow">01 / DATA & MODEL</p><h2>Configure the experiment</h2></div>
+        <button id="resetBtn" class="button button-quiet">Reset defaults</button>
+      </div>
+      <details class="settings-drawer" open>
+        <summary>Parameters &amp; settings <span class="summary-hint">Density model · sample size · correlation · seed · KDE bandwidth</span></summary>
+        <div class="control-grid">
+          <label>Density model
+            <select id="model">
+              <option value="normal">Bivariate normal (fitted)</option>
+              <option value="kde">Kernel density estimate (KDE)</option>
+            </select>
+          </label>
+          <label>Sample size <output id="nOut">300</output>
+            <input id="sampleSize" type="range" min="50" max="1500" step="50" value="300">
+          </label>
+          <label>Generated-data correlation <output id="rhoOut">0.65</output>
+            <input id="rho" type="range" min="-0.95" max="0.95" step="0.05" value="0.65">
+          </label>
+          <label>Random seed
+            <input id="seed" type="number" min="1" max="999999" value="42">
+          </label>
+          <label class="bandwidth-control">KDE bandwidth multiplier <output id="bandwidthOut">1.00×</output>
+            <input id="bandwidth" type="range" min="0.40" max="2.50" step="0.05" value="1">
+          </label>
+        </div>
+      </details>
+      <div class="action-row">
+        <button id="generateBtn" class="button button-primary">Generate bivariate data</button>
+        <button id="randomizeBtn" class="button button-secondary">Randomize sample set</button>
+        <button id="randomizeBtn" class="button button-secondary">Randomize sample set</button>
+        <button id="settingsToggle" class="button button-secondary" aria-expanded="false" aria-controls="settingsPanel">Parameters & settings</button>
+        <label class="button button-secondary file-button">Import CSV<input id="csvFile" type="file" accept=".csv,text/csv"></label>
+        <button id="exportBtn" class="button button-secondary">Export CSV</button>
+        <button id="exampleBtn" class="button button-quiet">Load example</button>
+        <span id="dataStatus" class="muted" aria-live="polite">300 observations loaded</span>
+      </div>
+      <p class="hint">CSV format: two numeric columns. Column headers are optional; the first two columns are used. Extra columns are ignored.</p>
+      <div id="settingsPanel" class="settings-panel" hidden>
+        <div class="settings-heading"><div><p class="eyebrow">MODEL PARAMETERS</p><h3>Generation & display settings</h3></div><span class="muted">Used when generating synthetic data</span></div>
+        <div class="control-grid settings-grid">
+          <label>Target mean of X <input id="meanXParam" type="number" step="0.1" value="0"></label>
+          <label>Target mean of Y <input id="meanYParam" type="number" step="0.1" value="0"></label>
+          <label>Target SD of X <input id="sdXParam" type="number" min="0.01" step="0.1" value="1"></label>
+          <label>Target SD of Y <input id="sdYParam" type="number" min="0.01" step="0.1" value="1"></label>
+          <label>Target correlation <input id="targetRhoParam" type="number" min="-0.99" max="0.99" step="0.05" value="0.65"></label>
+          <label>Plot grid resolution
+            <select id="resolutionParam"><option value="30">Fast (30 × 30)</option><option value="45" selected>Balanced (45 × 45)</option><option value="60">Detailed (60 × 60)</option></select>
+          </label>
+        </div>
+        <div class="action-row">
+          <button id="applySettingsBtn" class="button button-primary">Apply settings & regenerate</button>
+          <button id="closeSettingsBtn" class="button button-quiet">Close settings</button>
+          <span class="hint">Imported CSV data is not changed by generation parameters.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="metric-grid" aria-label="Dataset summary">
+      <article class="metric-card"><span>Observations</span><strong id="countMetric">300</strong><small>paired rows</small></article>
+      <article class="metric-card"><span>Pearson correlation</span><strong id="corrMetric">0.00</strong><small id="corrLabel">linear association</small></article>
+      <article class="metric-card"><span>Mean of X · E[X] estimate</span><strong id="meanXMetric">0.00</strong><small id="sdXMetric">SD 1.00</small></article>
+      <article class="metric-card"><span>Mean of Y · E[Y] estimate</span><strong id="meanYMetric">0.00</strong><small id="sdYMetric">SD 1.00</small></article>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">02 / JOINT DISTRIBUTION</p><h2>Explore the density surface</h2></div>
+        <span class="tag" id="modelTag">Bivariate normal</span>
+      </div>
+      <p class="panel-description">Drag to rotate the 3D surface; use the plot toolbar to zoom, pan, or reset the view.</p>
+      <div id="surfacePlot" class="plot plot-large" aria-label="3D joint density surface"></div>
+    </section>
+
+    <section class="plot-grid">
+      <article class="panel">
+        <div class="section-heading compact"><div><p class="eyebrow">03 / 2D VIEW</p><h2>Joint density contours</h2></div></div>
+        <div id="contourPlot" class="plot" aria-label="2D joint density contour plot"></div>
+      </article>
+      <article class="panel">
+        <div class="section-heading compact"><div><p class="eyebrow">04 / MARGINALS</p><h2>Marginal density curves</h2></div></div>
+        <div id="marginalPlot" class="plot" aria-label="Marginal density curves for X and Y"></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">05 / OBSERVATIONS</p><h2>Bivariate dataset</h2></div>
+        <span class="muted" id="rangeStatus">Showing all observations</span>
+      </div>
+      <div id="scatterPlot" class="plot plot-medium" aria-label="Bivariate scatter plot"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>X</th><th>Y</th></tr></thead><tbody id="dataTable"></tbody></table>
+      </div>
+      <p class="hint">The table displays the first 20 rows. Export CSV to save the full dataset.</p>
+      <div class="expectation-strip">
+        <div><span>Estimated expected value E[X]</span><strong id="expectedXMetric">0.000</strong><small>Sample mean of X</small></div>
+        <div><span>Estimated expected value E[Y]</span><strong id="expectedYMetric">0.000</strong><small>Sample mean of Y</small></div>
+        <div><span>Pearson correlation r</span><strong id="correlationDetailMetric">0.000</strong><small>Linear association, not causation</small></div>
+      </div>
+    </section>
+
+    <section class="panel probability-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">06 / PROBABILITY</p><h2>Probability inside a rectangle</h2></div>
+      </div>
+      <p class="panel-description">Approximate \(P(x_{min} \le X \le x_{max},\ y_{min} \le Y \le y_{max})\) by numerically integrating the selected joint density over the rectangle.</p>
+      <div class="prob-controls">
+        <label>X minimum<input id="xmin" type="number" step="0.1" value="-1"></label>
+        <label>X maximum<input id="xmax" type="number" step="0.1" value="1"></label>
+        <label>Y minimum<input id="ymin" type="number" step="0.1" value="-1"></label>
+        <label>Y maximum<input id="ymax" type="number" step="0.1" value="1"></label>
+        <button id="probBtn" class="button button-primary">Calculate probability</button>
+      </div>
+      <div class="prob-result"><span>Estimated joint probability</span><strong id="probResult">—</strong><small id="probNote">Uses the current density model</small></div>
+    </section>
+
+    <section class="panel explanation">
+      <p class="eyebrow">QUICK REFERENCE</p>
+      <h2>How the views connect</h2>
+      <div class="formula-grid">
+        <div><strong>Joint density</strong><p>The surface height is \(f_{X,Y}(x,y)\). For a continuous distribution, probability is volume under the surface over a region.</p></div>
+        <div><strong>Marginal of X</strong><p>\(f_X(x)=\int f_{X,Y}(x,y)\,dy\). Integrate across all Y values to get the density of X alone.</p></div>
+        <div><strong>Marginal of Y</strong><p>\(f_Y(y)=\int f_{X,Y}(x,y)\,dx\). Integrate across all X values to get the density of Y alone.</p></div>
+      </div>
+      <p class="hint">Normal model: a bivariate normal is fitted to the sample mean and covariance. KDE model: a Gaussian kernel estimate is calculated from the observed pairs. KDE bandwidth uses a Scott-style rule and is intended for exploration, not formal inference.</p>
+    </section>
+  </main>
+  <footer>Joint Density &amp; Marginals Viewer · HTML, CSS, JavaScript, Plotly.js</footer>
+  <script src="app.js"></script>
+</body>
+</html>
