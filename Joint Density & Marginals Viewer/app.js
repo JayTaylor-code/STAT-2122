@@ -142,28 +142,56 @@
   }
   function fmt(v) { return Number(v).toFixed(3); }
   function updateMetrics() {
-    $("countMetric").textContent=stats.n;
-    $("corrMetric").textContent=fmt(stats.r);
-    $("corrLabel").textContent=stats.r>0.05?"positive linear association":stats.r<-.05?"negative linear association":"little linear association";
-    $("meanXMetric").textContent=fmt(stats.mx); $("meanYMetric").textContent=fmt(stats.my);
-    $("sdXMetric").textContent="SD "+fmt(stats.sx); $("sdYMetric").textContent="SD "+fmt(stats.sy);
-    // For the fitted normal, E[X] and E[Y] are its fitted location parameters.
-    // For KDE, the expectation of the Gaussian-kernel mixture equals the sample mean.
-    $("expectedXMetric").textContent=fmt(stats.mx);
-    $("expectedYMetric").textContent=fmt(stats.my);
-    $("expectedXNote").textContent=currentModel==="normal"?"fitted normal mean μX":"KDE mixture mean";
-    $("expectedYNote").textContent=currentModel==="normal"?"fitted normal mean μY":"KDE mixture mean";
-    $("modelCorrMetric").textContent=fmt(stats.r);
-    $("modelCorrNote").textContent=currentModel==="normal"?"fitted normal ρ":"sample-based KDE ρ";
-    $("covMetric").textContent=fmt(stats.cov);
-    $("bandwidthOut").textContent=bandwidthMultiplier.toFixed(2)+"×";
-    $("expectedXMetric").textContent=fmt(stats.mx); $("expectedYMetric").textContent=fmt(stats.my);
-    $("correlationDetailMetric").textContent=fmt(stats.r);
-    $("dataStatus").textContent=`${stats.n} observations loaded`;
-    $("modelTag").textContent=currentModel==="normal"?"Fitted bivariate normal":"Gaussian KDE";
-    $("rangeStatus").textContent=`Showing ${Math.min(20,data.length)} of ${data.length} rows`;
-    $("dataTable").innerHTML=data.slice(0,20).map((p,i)=>`<tr><td>${i+1}</td><td>${fmt(p.x)}</td><td>${fmt(p.y)}</td></tr>`).join("");
-  }
+    $("countMetric").textContent = stats.n;
+
+    $("corrMetric").textContent = fmt(stats.r);
+
+    $("corrLabel").textContent =
+        stats.r > 0.05 ? "positive linear association" :
+        stats.r < -0.05 ? "negative linear association" :
+        "little linear association";
+
+    $("meanXMetric").textContent = fmt(stats.mx);
+    $("meanYMetric").textContent = fmt(stats.my);
+
+    $("sdXMetric").textContent = "SD " + fmt(stats.sx);
+    $("sdYMetric").textContent = "SD " + fmt(stats.sy);
+
+    // Estimated expected values
+    $("expectedXMetric").textContent = fmt(stats.mx);
+    $("expectedYMetric").textContent = fmt(stats.my);
+
+    // Detailed correlation
+    $("correlationDetailMetric").textContent = fmt(stats.r);
+
+    // KDE bandwidth
+    $("bandwidthOut").textContent =
+        bandwidthMultiplier.toFixed(2) + "×";
+
+    // Dataset information
+    $("dataStatus").textContent =
+        `${stats.n} observations loaded`;
+
+    $("modelTag").textContent =
+        currentModel === "normal"
+            ? "Fitted bivariate normal"
+            : "Gaussian KDE";
+
+    $("rangeStatus").textContent =
+        `Showing ${Math.min(20, data.length)} of ${data.length} rows`;
+
+    // Populate observation table
+    $("dataTable").innerHTML = data
+        .slice(0, 20)
+        .map((p, i) =>
+            `<tr>
+                <td>${i + 1}</td>
+                <td>${fmt(p.x)}</td>
+                <td>${fmt(p.y)}</td>
+            </tr>`
+        )
+        .join("");
+}
   function render() {
     try {
       stats=summarize(data); currentModel=$("model").value;
@@ -227,17 +255,49 @@
   }
   $("sampleSize").addEventListener("input",()=> $("nOut").textContent=$("sampleSize").value);
   $("rho").addEventListener("input",()=> $("rhoOut").textContent=Number($("rho").value).toFixed(2));
-  function regenerateFromSettings(randomSeed=false) {
+  function regenerateFromSettings(randomSeed = false, useAdvancedRho = false) {
     try {
-      const s=generationSettings();
-      if (randomSeed) $("seed").value=String(1+Math.floor(Math.random()*999998));
-      data=generate(Number($("sampleSize").value),s.rho,Number($("seed").value)||1,s.mx,s.my,s.sx,s.sy);
-      $("rho").value=s.rho; $("rhoOut").textContent=s.rho.toFixed(2);
-      dataSource="generated"; render();
-    } catch(err) { alert(err.message); }
-  }
-  $("generateBtn").addEventListener("click",()=>regenerateFromSettings(false));
-  $("randomizeBtn").addEventListener("click",()=>regenerateFromSettings(true));
+        const s = generationSettings();
+
+        if (randomSeed) {
+            $("seed").value = String(
+                1 + Math.floor(Math.random() * 999998)
+            );
+        }
+
+        const rho = useAdvancedRho
+            ? s.rho
+            : Number($("rho").value);
+
+        data = generate(
+            Number($("sampleSize").value),
+            rho,
+            Number($("seed").value) || 1,
+            s.mx,
+            s.my,
+            s.sx,
+            s.sy
+        );
+
+        $("rho").value = rho;
+        $("rhoOut").textContent = rho.toFixed(2);
+
+        $("targetRhoParam").value = rho;
+
+        dataSource = "generated";
+
+        render();
+
+    } catch (err) {
+        alert(err.message);
+    }
+}
+  $("generateBtn").addEventListener("click", () =>
+    regenerateFromSettings(false, false)
+  );
+  $("randomizeBtn").addEventListener("click", () =>
+    regenerateFromSettings(true, false)
+  );
   $("settingsToggle").addEventListener("click",()=>{
     const panel=$("settingsPanel"), opening=panel.hidden;
     panel.hidden=!opening; $("settingsToggle").setAttribute("aria-expanded",String(opening));
@@ -245,7 +305,9 @@
   $("closeSettingsBtn").addEventListener("click",()=>{
     $("settingsPanel").hidden=true; $("settingsToggle").setAttribute("aria-expanded","false");
   });
-  $("applySettingsBtn").addEventListener("click",()=>regenerateFromSettings(false));
+  $("applySettingsBtn").addEventListener("click", () =>
+    regenerateFromSettings(false, true)
+  );
   $("model").addEventListener("change",render);
   $("csvFile").addEventListener("change",async e=>{
     const file=e.target.files[0]; if(!file)return;
