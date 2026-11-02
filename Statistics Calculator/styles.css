@@ -124,8 +124,15 @@ table input {
         padding: 10px;
     }
     input {
-        width: 100%;
-        box-sizing: border-box;
+        width: 120px;
+        height: 40px;
+        font-size: 16px;
+    }
+    table input {
+        width: 70px;
+        height: 30px;
+        font-size: 16px;
+        padding: 5px;
     }
     h1 {
         font-size: 1.5rem;
@@ -135,5 +142,11 @@ table input {
     }
     #jointOutput {
         overflow-wrap: break-word;
+    }
+    #tableContainer {
+        overflow-x: auto;
+    }
+    table {
+        margin-top: 20px
     }
 }
