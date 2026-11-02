@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Joint PMF Calculator</title>
+        <link rel="stylesheet" href="styles.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="author" content="Jay Taylor V">
+        <meta name="description" content="Statistics calculator for computing the mean, median, variance, standard deviation, expectation, PMF, PDF, and the correlation coefficient of a sample set(s) for data.">
+        <meta name="keywords" content="Mean, Median, Variance, Standard Deviation, Expectation, PMF, PDF, Correlation Coefficient">
+    </head>
+    <body>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="descriptive_stats.html">Descriptive Statistics</a>
+        </nav>
+        <h1 class="top-margin-larger">Joint PMF Calculator</h1>
+        <div class="text-body-wrapper">
+            <p>Number of X values:</p>
+            <input type="number" id="numX" min="1" placeholder="2">
+
+            <p>Number of Y values:</p>
+            <input type="number" id="numY" min="1" placeholder="2">
+
+            <br /><br />
+
+            <button onclick="generateTable()">Generate Table</button>
+            <button onclick="calculateJointPMF()">Calculate</button>
+            <button onclick="clearJointPMF()">Clear All</button>
+
+            <div id="tableContainer"></div>
+            <div id="jointOutput"></div>
+        </div>
+
+        <script src="app.js"></script>
+    </body>
+</html>
