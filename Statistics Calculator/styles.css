@@ -13,7 +13,7 @@ h1 {
     margin-top: 60px;
 }
 .wrapper {
-    max-width: 60vw;
+    max-width: 900px;
     border: 2px solid #ccc;
     padding: 20px;
     display: flex;
@@ -50,7 +50,7 @@ nav a:hover {
     text-decoration: underline;
 }
 .text-body-wrapper {
-    max-width: 60vw;
+    max-width: 900px;
     margin: 0 auto;
 }
 textarea {
@@ -63,7 +63,7 @@ button {
     cursor: pointer;
 }
 input {
-    width: 13vw;
+    width: 200px;
     height: 20px;
 }
 table {
@@ -75,7 +75,7 @@ th,td {
     padding: 8px;
 }
 table input {
-    width: 6vw;
+    width: 84px;
     background: rgb(60,60,60);
     color: white;
     border: 1px solid #aaa;
@@ -98,4 +98,42 @@ table input {
     white-space: pre-wrap;
     border: 1px solid #ccc;
     padding: 10px;
+}
+@media screen and (max-width: 768px) {
+    .wrapper {
+        max-width: 95%;
+        width: 95%;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    .text-body-wrapper {
+        max-width: 95%;
+        width: 95%;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    nav {
+        padding: 10px;
+    }
+    input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    h1 {
+        font-size: 1.5rem;
+    }
+    #output {
+        overflow-wrap: break-word;
+    }
+    #jointOutput {
+        overflow-wrap: break-word;
+    }
 }
