@@ -13,7 +13,7 @@ h1 {
     margin-top: 60px;
 }
 .wrapper {
-    max-width: 900px;
+    max-width: 60vw;
     border: 2px solid #ccc;
     padding: 20px;
     display: flex;
@@ -26,7 +26,7 @@ h1 {
     padding: 10px;
     border: 1px solid #ccc;
     text-align: center;
-    max-width: 600px;
+    max-width: 50vw;
 }
 .menu a {
     color: white;
@@ -50,7 +50,7 @@ nav a:hover {
     text-decoration: underline;
 }
 .text-body-wrapper {
-    max-width: 900px;
+    max-width: 60vw;
     margin: 0 auto;
 }
 textarea {
@@ -63,7 +63,7 @@ button {
     cursor: pointer;
 }
 input {
-    width: 200px;
+    width: 13vw;
     height: 20px;
 }
 table {
@@ -75,7 +75,7 @@ th,td {
     padding: 8px;
 }
 table input {
-    width: 84px;
+    width: 6vw;
     background: rgb(60,60,60);
     color: white;
     border: 1px solid #aaa;
