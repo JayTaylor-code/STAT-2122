@@ -191,7 +191,7 @@ function varianceY(joint) {
 function covariance(joint) {
     return (expectedXY(joint) - expectedX(joint) * expectedY(joint));
 }
-function correlation(joint) {
+function correlationJoint(joint) {
     const cov = covariance(joint);
     const sdX = Math.sqrt(varianceX(joint));
     const sdY = Math.sqrt(varianceY(joint));
@@ -246,7 +246,7 @@ function calculateJointPMF() {
     output += `\nVar(X) = ${varianceX(joint).toFixed(4)}\n`;
     output += `Var(Y) = ${varianceY(joint).toFixed(4)}\n`;
     output += `\nCov(X,Y) = ${covariance(joint).toFixed(4)}\n`
-    output += `Correlation = ${correlation(joint).toFixed(4)}\n`
+    output += `Correlation = ${correlationJoint(joint).toFixed(4)}\n`
     output += `\nIndependent? ${isIndependent(joint) ? "Yes" : "No"}`;
     document.getElementById("jointOutput").textContent = output;
     document.getElementById("jointOutput").style.display = "block";
