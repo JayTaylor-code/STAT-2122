@@ -1,11 +1,24 @@
-numbers = [165, 225, 185, 341, 77, 227, 176, 154, 224, 204, 94]
-sorted_numbers = sorted(numbers)
-n = len(sorted_numbers)
-mid = n // 2
+from data_loader import load_data
 
-if n % 2 == 0:
-    median = (sorted_numbers[mid - 1] + sorted_numbers[mid]) / 2
-else:
-    median = sorted_numbers[mid]
 
-print("The median is: ", median)
+def median():
+    data = sorted(load_data('data.json'))
+    n = len(data)
+    if (n % 2 == 0):
+        m = (data[n//2 - 1] + data[n//2]) / 2
+    else:
+        m = data[n//2]
+    return m
+
+
+def median_of(data):
+    n = len(data)
+    if (n % 2 == 0):
+        m = (data[n//2 - 1] + data[n//2]) / 2
+    else:
+        m = data[n//2]
+    return m
+
+
+if __name__ == '__main__':
+    print('Median: ',median())

@@ -1,6 +1,15 @@
-numbers = [165, 225, 185, 341, 77, 227, 176, 154, 224, 204, 94]
-the_sum = 0
-for number in numbers:
-    the_sum += number
-mean = the_sum / len(numbers)
-print("The mean is: ", mean)
+from data_loader import load_data
+
+
+def mean():
+    data = load_data('data.json')
+    m = sum(data) / len(data)
+    return m
+
+
+def mean_of(data):
+    return sum(data) / len(data)
+
+
+if __name__ == '__main__':
+    print('Mean: ',mean())
