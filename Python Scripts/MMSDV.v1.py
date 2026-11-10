@@ -17,5 +17,5 @@ std_dev = variance ** 0.5
 
 print("Mean: ", mean)
 print("Median: ", median)
-print("Standard deviation: ", std_dev);
+print("Standard deviation: ", std_dev)
 print("Variance: ", variance)
