@@ -7,8 +7,8 @@ def standard_deviation():
     return std_dev
 
 
-def standard_deviation_of(data):
-    std_dev = sqrt(variance_of(data))
+def standard_deviation_of(data,size):
+    std_dev = sqrt(variance_of(data,size))
     return std_dev
 
 
