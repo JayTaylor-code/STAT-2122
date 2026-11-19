@@ -50,5 +50,8 @@ int main() {
     delete[] y;
     size = 0;
 
+    std::cout << std::endl << "Press Enter to exit...";
+    std::cin.get();
+
     return 0;
 }
