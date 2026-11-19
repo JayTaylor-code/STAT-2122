@@ -8,7 +8,7 @@ def covariance():
     size = load_data('data2.json')['size']
     x_mean = mean_of(x,size)
     y_mean = mean_of(y,size)
-    cov = sum((a - x_mean) * (b - y_mean) for a,b in zip(x,y)) / len(x)
+    cov = sum((a - x_mean) * (b - y_mean) for a,b in zip(x,y)) / (size - 1)
     return cov
 
 
