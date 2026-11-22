@@ -1,0 +1,170 @@
+///////////////////////////////////////////////////////////////////////////////
+//  Copyright 2014 Anton Bikineev
+//  Copyright 2014 Christopher Kormanyos
+//  Copyright 2014 John Maddock
+//  Copyright 2014 Paul Bristow
+//  Distributed under the Boost
+//  Software License, Version 1.0. (See accompanying file
+//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_MATH_HYPERGEOMETRIC_0F1_HPP
+#define BOOST_MATH_HYPERGEOMETRIC_0F1_HPP
+
+#include <boost/math/policies/policy.hpp>
+#include <boost/math/policies/error_handling.hpp>
+#include <boost/math/special_functions/detail/hypergeometric_series.hpp>
+#include <boost/math/special_functions/detail/hypergeometric_0F1_bessel.hpp>
+#include <boost/math/tools/compensated_arithmetic.hpp>
+
+BOOST_MATH_NAMESPACE_BEGIN namespace detail {
+
+
+   template <class T>
+   struct hypergeometric_0F1_cf
+   {
+      //
+      // We start this continued fraction at b on index -1
+      // and treat the -1 and 0 cases as special cases.
+      // We do this to avoid adding the continued fraction result
+      // to 1 so that we can accurately evaluate for small results
+      // as well as large ones.  See http://functions.wolfram.com/07.17.10.0002.01
+      //
+      T b, z;
+      int k;
+      hypergeometric_0F1_cf(T b_, T z_) : b(b_), z(z_), k(-2) {}
+      typedef std::pair<T, T> result_type;
+
+      result_type operator()()
+      {
+         ++k;
+         if (k <= 0)
+            return std::make_pair(z / b, 1);
+         return std::make_pair(-z / ((k + 1) * (b + k)), 1 + z / ((k + 1) * (b + k)));
+      }
+   };
+
+   template <class T, class Policy>
+   T hypergeometric_0F1_cf_imp(T b, T z, const Policy& pol, const char* function)
+   {
+      hypergeometric_0F1_cf<T> evaluator(b, z);
+      std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+      T cf = tools::continued_fraction_b(evaluator, policies::get_epsilon<T, Policy>(), max_iter);
+      policies::check_series_iterations<T>(function, max_iter, pol);
+      return cf;
+   }
+
+
+   //
+   // Where the series alternates its largest terms exceed the result by up to about e^(2 sqrt(-z)), which multiplies
+   // their rounding errors.  So carry the terms' errors, and the sum's, found with error-free transforms (which need a
+   // binary type): the error is then about eps^2 times the largest term, plus the final rounding.
+   //
+   template <class T, class Policy>
+   T hypergeometric_0F1_compensated_series(const T& b, const T& z, const Policy& pol, const char* function)
+   {
+      BOOST_MATH_STD_USING
+      two_product<T> product;
+      T term = 1, term_error = 0, sum = 1, sum_error = 0;
+      std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+      std::uintmax_t n = 0;
+      for (; n < max_iter; ++n)
+      {
+         // d + d_error = (b + n)(n + 1) and r + r_error = z / d, to twice the working precision:
+         const T bn = b + n;
+         T d, d_error, rd, rd_error;
+         product(bn, T(n + 1), d, d_error);
+         d_error += two_sum_error(b, T(n), bn) * (n + 1);
+         const T r = z / d;
+         product(r, d, rd, rd_error);
+         const T r_error = (((z - rd) - rd_error) - r * d_error) / d;
+         T next, next_error;
+         product(term, r, next, next_error);
+         term_error = term_error * r + (term * r_error + next_error);
+         term = next;
+         const T s = sum + term;
+         sum_error += two_sum_error(sum, term, s) + term_error;
+         sum = s;
+         if ((fabs(term) <= fabs(sum) * policies::get_epsilon<T, Policy>() / 4) && (fabs(d) > fabs(z)))
+            break;
+      }
+      policies::check_series_iterations<T>(function, n, pol);
+      // The error terms are inf or NaN once a term overflows (or the product splitting does), then the plain sum is all:
+      return (BOOST_MATH_NAMESPACE::isfinite)(sum_error) ? T(sum + sum_error) : sum;
+   }
+
+   template <class T, class Policy>
+   inline T hypergeometric_0F1_imp(const T& b, const T& z, const Policy& pol)
+   {
+      const char* function = "boost::math::hypergeometric_0f1<%1%,%1%>(%1%, %1%)";
+      BOOST_MATH_STD_USING
+
+         // some special cases
+         if (z == 0)
+            return T(1);
+
+      if ((b <= 0) && (b == floor(b)))
+         return policies::raise_pole_error<T>(function, "Evaluation of 0f1 with nonpositive integer b = %1%.", b, pol);
+
+      // For b < -5 the alternating series cancels badly once 2 sqrt(-z) > 0.75 |b|, the Bessel relation does not:
+      if ((b < -5) && (z < -b * b / 7))
+         return hypergeometric_0F1_bessel(b, z, pol);
+      if (BOOST_MATH_NAMESPACE::numeric_limits<T>::radix != 10)
+      {
+         // The compensated series loses about e^(2 sqrt(-z)), or only e^(2 |z / b|) where it does not oscillate, of its
+         // doubled precision: keep both below 2^(digits / 2) or so, and use the Bessel relation beyond.
+         if ((z < -T(tools::digits<T>() * tools::digits<T>()) / 16) && (b > -5) && (fabs(z / b) > T(tools::digits<T>()) / 8))
+            return hypergeometric_0F1_bessel(b, z, pol);
+         if ((z < 0) || (b < 0))
+            return hypergeometric_0F1_compensated_series(b, z, pol, function);
+         return detail::hypergeometric_0F1_generic_series(b, z, pol);
+      }
+      if (z < -5 && b > -5)
+      {
+         // Series is alternating and divergent, need to do something else here,
+         // Bessel function relation is much more accurate, unless |b| is similarly
+         // large to |z|, otherwise the CF formula suffers from cancellation when
+         // the result would be very small.  For positive b the CF's error grows rapidly
+         // once |z/b| > 2, but for b > max_factorial the Bessel relation needs lgamma and
+         // is only accurate to a few hundred eps.
+         if (fabs(z / b) > (((b > 0) && (b <= BOOST_MATH_NAMESPACE::max_factorial<T>::value)) ? 2 : 4))
+            return hypergeometric_0F1_bessel(b, z, pol);
+         return hypergeometric_0F1_cf_imp(b, z, pol, function);
+      }
+      // evaluation through Taylor series looks
+      // more precisious than Bessel relation:
+      // detail::hypergeometric_0f1_bessel(b, z, pol);
+      return detail::hypergeometric_0F1_generic_series(b, z, pol);
+   }
+
+} // namespace detail
+
+BOOST_MATH_EXPORT template <class T1, class T2, class Policy>
+inline typename tools::promote_args<T1, T2>::type hypergeometric_0F1(T1 b, T2 z, const Policy& /* pol */)
+{
+   BOOST_FPU_EXCEPTION_GUARD
+      typedef typename tools::promote_args<T1, T2>::type result_type;
+   typedef typename policies::evaluation<result_type, Policy>::type value_type;
+   typedef typename policies::normalise<
+      Policy,
+      policies::promote_float<false>,
+      policies::promote_double<false>,
+      policies::discrete_quantile<>,
+      policies::assert_undefined<> >::type forwarding_policy;
+   return policies::checked_narrowing_cast<result_type, Policy>(
+      detail::hypergeometric_0F1_imp<value_type>(
+         static_cast<value_type>(b),
+         static_cast<value_type>(z),
+         forwarding_policy()),
+      "boost::math::hypergeometric_0F1<%1%>(%1%,%1%)");
+}
+
+BOOST_MATH_EXPORT template <class T1, class T2>
+inline typename tools::promote_args<T1, T2>::type hypergeometric_0F1(T1 b, T2 z)
+{
+   return hypergeometric_0F1(b, z, policies::policy<>());
+}
+
+
+BOOST_MATH_NAMESPACE_END
+
+#endif // BOOST_MATH_HYPERGEOMETRIC_HPP
