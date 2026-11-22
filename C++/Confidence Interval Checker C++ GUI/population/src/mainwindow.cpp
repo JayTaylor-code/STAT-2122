@@ -10,7 +10,7 @@
 #include "confidenceInterval.h"
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
-    setWindowTitle("Confidence Interval Calculator");
+    setWindowTitle("Population Confidence Interval Calculator");
     resize(450,300);
     meanBox = new QLineEdit;
     meanBox->setPlaceholderText("e.g. 100.5");
