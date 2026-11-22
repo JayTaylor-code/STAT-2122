@@ -8,6 +8,8 @@ qt_add_executable(PopulationConfidenceInterval WIN32
     src/mainwindow.cpp
     src/confidenceInterval.cpp
     src/getZCritical.cpp
+    resources.qrc
+    app.rc
 )
 target_include_directories(PopulationConfidenceInterval PRIVATE
     ${CMAKE_SOURCE_DIR}/include

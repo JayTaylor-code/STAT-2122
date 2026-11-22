@@ -3,8 +3,7 @@
 
 #include <QWidget>
 
-class QDoubleSpinBox;
-class QSpinBox;
+class QLineEdit;
 class QLabel;
 class QPushButton;
 
@@ -13,10 +12,10 @@ class MainWindow : public QWidget {
         explicit MainWindow(QWidget *parent = nullptr);
     private:
         void calculateInterval();
-        QDoubleSpinBox* meanBox;
-        QDoubleSpinBox* stdDevBox;
-        QSpinBox* sizeBox;
-        QDoubleSpinBox* confidenceBox;
+        QLineEdit* meanBox;
+        QLineEdit* stdDevBox;
+        QLineEdit* sizeBox;
+        QLineEdit* confidenceBox;
         QLabel* zLabel;
         QLabel* seLabel;
         QLabel* lowerLabel;

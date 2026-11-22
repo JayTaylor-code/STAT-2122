@@ -1,0 +1,9 @@
+{
+    "cmake.generator": "Visual Studio 18 2026",
+    "cmake.configureOnOpen": true,
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.12.0/msvc2022_arm64",
+        "CMAKE_GENERATOR_PLATFORM": "ARM64"
+    }
+}
